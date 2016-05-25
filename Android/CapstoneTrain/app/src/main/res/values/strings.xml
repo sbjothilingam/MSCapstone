@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">CapstoneTrain</string>
+
+    <string name="server_ip_label">Enter Server IP</string>
+    <string name="enter_label">Enter</string>
+    <string name="eg_ip">eg.10.10.10.10</string>
 </resources>

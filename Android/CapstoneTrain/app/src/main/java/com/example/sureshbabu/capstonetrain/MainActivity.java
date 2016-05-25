@@ -9,6 +9,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 
 import java.io.BufferedReader;
@@ -19,13 +21,16 @@ import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
     ImageButton imageButton_connect;
-    String server_ip = "129.21.107.130";
+    String server_ip = "";
     String activityName;
     SensorManager sensorManager;
     Sensor sensor;
 
     PowerManager powerManager;
     PowerManager.WakeLock wakeLock;
+
+    EditText ip;
+    Button enter_btn;
 
     public void init(){
 
@@ -34,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(getApplicationContext().SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
+        imageButton_connect.setClickable(false);
+
         imageButton_connect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -41,6 +48,20 @@ public class MainActivity extends AppCompatActivity {
                     new ConnectToServer().execute();
                 } catch (Exception e){
                     displayError(e);
+                }
+            }
+        });
+
+        enter_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!ip.getText().toString().equals("")){
+                    imageButton_connect.setClickable(true);
+                    server_ip = ip.getText().toString().trim();
+
+                    ip.setClickable(false);
+                    ip.setFocusable(false);
+                    ip.setFocusableInTouchMode(false);
                 }
             }
         });
@@ -129,6 +150,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         imageButton_connect = (ImageButton) findViewById(R.id.imageButton_connect);
+
+        ip = (EditText) findViewById(R.id.server_ip);
+        enter_btn = (Button) findViewById(R.id.server_button);
 
         powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "My Lock");

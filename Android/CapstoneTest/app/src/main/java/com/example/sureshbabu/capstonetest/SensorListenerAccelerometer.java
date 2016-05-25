@@ -37,7 +37,7 @@ public class SensorListenerAccelerometer implements SensorEventListener {
         //for every 150 instance send it to server
         if(this.data.size() == 150){
             //Log.d("SensorMessageToSend", this.data.get(0)+","+this.data.get(1)+","+this.data.get(2));
-            new SendDataToServer(this.serverIp,this.data, this.write).start();
+            new SendDataToServer(this.serverIp,new ArrayList<String>(this.data), this.write).start();
             this.data.clear();
         }
     }

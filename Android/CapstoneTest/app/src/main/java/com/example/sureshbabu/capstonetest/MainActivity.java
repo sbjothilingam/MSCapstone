@@ -12,6 +12,8 @@ import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -30,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     //variables used
     ImageButton connect;
-    String server_ip = "129.21.105.107";
+    String server_ip = "";
     SensorManager sensorManager;
     Sensor sensor;
     boolean isClicked;
@@ -43,10 +45,14 @@ public class MainActivity extends AppCompatActivity {
     PowerManager powerManager;
     WakeLock wakeLock;
     DecimalFormat format;
+    EditText ip;
+    Button enter_btn;
 
     //init function to instantiate all the widgets
     void init(){
         try {
+
+            connect.setClickable(false);
 
             wakeLock.acquire();
 
@@ -76,13 +82,27 @@ public class MainActivity extends AppCompatActivity {
 
                             new TimerThread().start();
                         } else {
-
+                            isClicked = false;
                             connect.setImageDrawable(getResources().getDrawable(R.drawable.off));
                             listener.closeOpenConnections();
                             sensorManager.unregisterListener(listener);
                         }
                     } catch (Exception e) {
                         displayError("ButtonClick",e);
+                    }
+                }
+            });
+
+            enter_btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(!ip.getText().toString().equals("")){
+                        connect.setClickable(true);
+                        server_ip = ip.getText().toString().trim();
+
+                        ip.setClickable(false);
+                        ip.setFocusableInTouchMode(false);
+                        ip.setFocusable(false);
                     }
                 }
             });
@@ -158,6 +178,8 @@ public class MainActivity extends AppCompatActivity {
                 input = new ObjectInputStream(socket.getInputStream());
                 String activity = "";
 
+                int count = 0;
+
                 startTime = System.currentTimeMillis();
                 boolean isStart = true;
 
@@ -168,24 +190,32 @@ public class MainActivity extends AppCompatActivity {
                         isClicked = false;
                         continue;
                     }
+
                     if (isStart){
                         activity = result;
                         isStart = false;
-                        textToSpeech.speak("You are " + result, TextToSpeech.QUEUE_FLUSH, null);
+                        //textToSpeech.speak("You are " + result, TextToSpeech.QUEUE_FLUSH, null);
                         publishProgress();
                     }
                     else if(!result.equals(activity) && !result.equals("none")) {
 
-                        endTime = System.currentTimeMillis();
-                        activities_summary.put(activity, activities_summary.get(activity) + Double.valueOf(endTime - startTime));
-                        //Log.d("Updated", activity + " " + activities_summary.get(activity) + " " + endTime + " " + startTime + " " + (endTime - startTime));
-                        startTime = endTime;
-                        //update UI
-                        publishProgress();
+                        if ((result.equals("walking") && count == 0) || (result.equals("walking") && count == 1)){
+                            count++;
+                        } else {
 
-                        textToSpeech.speak("You are " + result, TextToSpeech.QUEUE_FLUSH, null);
-                        activity = result;
-                        vibrator.vibrate(150);
+                            count = 0;
+
+                            endTime = System.currentTimeMillis();
+                            activities_summary.put(activity, activities_summary.get(activity) + Double.valueOf(endTime - startTime));
+                            //Log.d("Updated", activity + " " + activities_summary.get(activity) + " " + endTime + " " + startTime + " " + (endTime - startTime));
+                            startTime = endTime;
+                            //update UI
+                            publishProgress();
+
+                            textToSpeech.speak("You are " + result, TextToSpeech.QUEUE_FLUSH, null);
+                            activity = result;
+                            vibrator.vibrate(150);
+                        }
                     }
                 }
                 input.close();
@@ -203,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
             super.onProgressUpdate(values);
             sitting_summary.setText(((activities_summary.get("sitting")>=Double.valueOf(60000))? format.format(activities_summary.get("sitting")/60000).toString()+" minutes" : format.format(activities_summary.get("sitting")/1000).toString()+" seconds"));
             standing_summary.setText(((activities_summary.get("standing") >= Double.valueOf(60000)) ? format.format(activities_summary.get("standing") / 60000).toString()+ " minutes" : format.format(activities_summary.get("standing") / 1000).toString() +" seconds"));
-            walking_summary.setText(((activities_summary.get("walking") >= Double.valueOf(60000)) ? format.format(activities_summary.get("walking") / 60000).toString()+ " minutes" : format.format(activities_summary.get("walking") / 1000).toString() +" seconds"));
+            walking_summary.setText(((activities_summary.get("walking") >= Double.valueOf(60000)) ? format.format(activities_summary.get("walking") / 60000).toString() + " minutes" : format.format(activities_summary.get("walking") / 1000).toString() + " seconds"));
         }
 
     }
@@ -258,6 +288,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ip = (EditText) findViewById(R.id.server_ip);
+        enter_btn = (Button) findViewById(R.id.server_button);
 
         connect = (ImageButton)findViewById(R.id.imageButton_connect);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
